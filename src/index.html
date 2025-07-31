@@ -1,0 +1,126 @@
+<!-- QuarkNavigator: HTML UI with Tabs, URL bar, Dark Mode, Bookmarks -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QuarkNavigator</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+    .controls {
+      display: flex;
+      padding: 8px;
+      background: #f0f0f0;
+    }
+    #url {
+      flex: 1;
+      padding: 4px;
+      margin: 0 8px;
+    }
+    .tabs {
+      display: flex;
+      background: #ddd;
+      padding: 4px;
+      overflow-x: auto;
+    }
+    .tab {
+      padding: 6px 12px;
+      background: #bbb;
+      margin-right: 4px;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: #888;
+      color: white;
+    }
+    iframe {
+      width: 100%;
+      height: 90vh;
+      border: none;
+    }
+    .dark body {
+      background: #111;
+      color: #fff;
+    }
+    .dark .controls, .dark .tabs {
+      background: #222;
+    }
+    .dark .tab {
+      background: #444;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <button onclick="addTab()">+</button>
+    <input id="url" placeholder="Enter URL" />
+    <button onclick="loadURL()">Go</button>
+    <button onclick="toggleDark()">🌙</button>
+    <button onclick="addBookmark()">⭐</button>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div id="browserArea"></div>
+
+  <script>
+    let tabs = [];
+    let activeTab = null;
+
+    function addTab(url = 'https://example.com') {
+      const id = Date.now().toString();
+      const iframe = document.createElement('iframe');
+      iframe.src = url;
+      iframe.id = 'frame-' + id;
+      iframe.style.display = 'none';
+      document.getElementById('browserArea').appendChild(iframe);
+
+      const tabBtn = document.createElement('div');
+      tabBtn.className = 'tab';
+      tabBtn.innerText = url;
+      tabBtn.onclick = () => switchTab(id);
+      tabBtn.dataset.id = id;
+      document.getElementById('tabs').appendChild(tabBtn);
+
+      tabs.push({ id, iframe, tabBtn });
+      switchTab(id);
+    }
+
+    function switchTab(id) {
+      tabs.forEach(t => {
+        t.iframe.style.display = t.id === id ? 'block' : 'none';
+        t.tabBtn.classList.toggle('active', t.id === id);
+      });
+      activeTab = tabs.find(t => t.id === id);
+      document.getElementById('url').value = activeTab.iframe.src;
+    }
+
+    function loadURL() {
+      const url = document.getElementById('url').value;
+      const fullUrl = url.startsWith('http') ? url : 'https://' + url;
+      if (activeTab) {
+        activeTab.iframe.src = fullUrl;
+        activeTab.tabBtn.innerText = fullUrl;
+      }
+    }
+
+    function toggleDark() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+    function addBookmark() {
+      const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+      if (activeTab) {
+        bookmarks.push({ url: activeTab.iframe.src });
+        localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+        alert('Bookmark added!');
+      }
+    }
+
+    // On start
+    addTab();
+  </script>
+</body>
+</html>
